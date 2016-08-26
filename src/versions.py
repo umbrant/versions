@@ -56,7 +56,7 @@ def main():
     #query = "issue = HADOOP-13409"
     while True:
         logger.info("Fetching batch of issues %d to %d", len(issues), len(issues)+max_results-1)
-        batch = jira.search_issues(query, maxResults=max_results)
+        batch = jira.search_issues(query, startAt=len(issues), maxResults=max_results)
         issues += batch
         if len(batch) == 0 or len(issues) >= batch.total:
             break
