@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python
 
 import os
 import sys
@@ -6,8 +6,8 @@ import sys
 from jira import JIRA
 
 def get_credentials():
-    user = os.environ["JIRA_USER"]
-    password = os.environ["JIRA_PASSWORD"]
+    user = os.environ.get("JIRA_USER", None)
+    password = os.environ.get("JIRA_PASSWORD", None)
 
     if user is None or password is None:
         sys.stderr.write("Set JIRA_USER and JIRA_PASSWORD environment variables to authenticate.")
@@ -15,31 +15,40 @@ def get_credentials():
 
     return (user, password)
 
-# By default, the client will connect to a JIRA instance started from the Atlassian Plugin SDK.
-# See
-# https://developer.atlassian.com/display/DOCS/Installing+the+Atlassian+Plugin+SDK
-# for details.
-
 options = {
     'server': 'https://issues.apache.org/jira',
-    'basic_auth': get_credentials()
 }
+basic_auth = get_credentials()
 
-jira = JIRA(options)    # a username/password tuple
-
-# Get the mutable application properties for this server (requires
-# jira-system-administrators permission)
-props = jira.application_properties()
+jira = JIRA(options, basic_auth=basic_auth)    # a username/password tuple
 
 # Find all issues reported by the admin
-projects = jira.projects()
-for p in projects:
-    print p
+issues = []
+max_results = 500
+#query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion not in ("3.0.0-alpha1", "3.0.0-alpha2") and fixVersion in ("2.8.0", "2.9.0", "2.6.4", "2.7.2")"""
+query = "issue = HADOOP-13409"
+while True:
+    print "Fetching batch of issues %d to %d" % (len(issues), len(issues)+max_results)
+    batch = jira.search_issues(query, maxResults=max_results)
+    issues += batch
+    if len(batch) == 0 or len(issues) >= batch.total:
+        break
 
-sys.exit(0)
-issues = jira.search_issues('assignee=admin')
+projects = {}
 
-# Find the top three projects containing issues reported by admin
-from collections import Counter
-top_three = Counter(
-    [issue.fields.project.key for issue in issues]).most_common(3)
+for issue in issues:
+    print "Updating", issue.key
+
+    project_key = issue.fields.project.key
+    if project_key not in projects:
+        projects[project_key] = jira.project(project_key)
+    project = projects[project_key]
+
+    fix_versions = []
+    for v in issue.fields.fixVersions:
+        fix_versions.append({"name": v.name})
+    print "Current fix versions:", fix_versions
+    fix_versions.append({"name": "3.0.0-alpha1"})
+    print "New fix versions:", fix_versions
+    issue.update(fields={'fixVersions': fix_versions})
+

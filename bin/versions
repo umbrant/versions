@@ -29,4 +29,4 @@ fi
 source "$ENV/$env_name/bin/activate"
 
 # Execute
-"$DIR/../src/versions.py" "$@"
+python "$DIR/../src/versions.py" "$@"
