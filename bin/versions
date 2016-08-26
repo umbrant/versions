@@ -9,9 +9,9 @@ env_name="versions-env"
 
 # Check the git hash of when the virtualenv was created.
 # If it differs, wipe and reinitialize, saving a new hash.
-pushd "$DIR"
+pushd "$DIR" > /dev/null
 git_hash=$(git rev-parse HEAD)
-popd
+popd > /dev/null
 hash_file="$ENV/$env_name/git-hash"
 if [[ ! -e "$hash_file" || "$git_hash" != "$(cat $hash_file)" ]]; then
     echo "Initializing virtualenv"
@@ -29,4 +29,4 @@ fi
 source "$ENV/$env_name/bin/activate"
 
 # Execute
-python "$DIR/../src/versions.py" "$@"
+exec "$DIR/../src/versions.py" "$@"
