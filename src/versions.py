@@ -21,18 +21,24 @@ def get_credentials():
 
     return (user, password)
 
-def main() :
+def main():
 
     parser = argparse.ArgumentParser(description="Do bulk fix version updates on JIRA.")
     parser.add_argument("-f", "--force",
                         action="store_true",
                         help="If not specified, will not do any actual updates to JIRA.")
+    parser.add_argument("-o", "--output",
+                        help="Log changes to an external file.")
     args = parser.parse_args()
 
     if not args.force:
         logger.info("=================================")
         logger.info("Dry-run, will not commit changes.")
         logger.info("=================================")
+
+    outfile = None
+    if args.output is not None:
+        outfile = open(args.output, "w")
 
     options = {
         'server': 'https://issues.apache.org/jira',
@@ -68,7 +74,13 @@ def main() :
         fix_versions = []
         for v in issue.fields.fixVersions:
             fix_versions.append({"name": v.name})
-        logger.info("Cur fix versions: %s", [f["name"] for f in fix_versions])
+
+        # Print old fix versions
+        logger.info("Old fix versions: %s", [f["name"] for f in fix_versions])
+        if outfile is not None:
+            outfile.write(issue.key + " old fix versions: ")
+            outfile.write(",".join([f["name"] for f in fix_versions]))
+            outfile.write("\n")
 
         # Add the 3.0.0-alpha1 fixVersion
         fix_versions.append({"name": "3.0.0-alpha1"})
@@ -76,9 +88,17 @@ def main() :
         fix_versions = [f for f in fix_versions if f["name"] != "3.0.0-alpha2"]
 
         logger.info("New fix versions: %s", [f["name"] for f in fix_versions])
+        if outfile is not None:
+            outfile.write(issue.key + " new fix versions: ")
+            outfile.write(",".join([f["name"] for f in fix_versions]))
+            outfile.write("\n")
+
         if args.force:
             logger.info("Updating %s", issue.key)
             issue.update(fields={'fixVersions': fix_versions})
+
+    if outfile is not None:
+        outfile.close()
 
 if __name__ == "__main__":
     main()
