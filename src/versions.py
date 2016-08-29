@@ -31,10 +31,14 @@ def main():
                         help="Log changes to an external file.")
     args = parser.parse_args()
 
-    if not args.force:
-        logger.info("=================================")
+    if args.force:
+        logger.info("==============================================")
+        logger.info("--force specified, will commit changes!")
+        logger.info("Press enter to confirm, or Ctrl-C to cancel.")
+        logger.info("==============================================")
+        raw_input()
+    else:
         logger.info("Dry-run, will not commit changes.")
-        logger.info("=================================")
 
     outfile = None
     if args.output is not None:
@@ -82,8 +86,9 @@ def main():
             outfile.write(",".join([f["name"] for f in fix_versions]))
             outfile.write("\n")
 
-        # Add the 3.0.0-alpha1 fixVersion
-        fix_versions.append({"name": "3.0.0-alpha1"})
+        # Add the 3.0.0-alpha1 fixVersion if not present
+        if "3.0.0-alpha1" not in [f["name"] for f in fix_versions]:
+            fix_versions.append({"name": "3.0.0-alpha1"})
         # Remove any 3.0.0-alpha2 fixVersions, since we're rebranching
         fix_versions = [f for f in fix_versions if f["name"] != "3.0.0-alpha2"]
 
