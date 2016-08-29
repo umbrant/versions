@@ -31,18 +31,21 @@ def main():
                         help="Log changes to an external file.")
     args = parser.parse_args()
 
+    outfile = None
+    if args.output is not None:
+        logger.info("Logging changes to output file %s", args.output)
+        outfile = open(args.output, "w")
+
     if args.force:
-        logger.info("==============================================")
+        logger.info("=================================================")
         logger.info("--force specified, will commit changes!")
+        if outfile is None:
+            logger.info("Recommend also specifying --output for safety.")
         logger.info("Press enter to confirm, or Ctrl-C to cancel.")
-        logger.info("==============================================")
+        logger.info("================================================")
         raw_input()
     else:
         logger.info("Dry-run, will not commit changes.")
-
-    outfile = None
-    if args.output is not None:
-        outfile = open(args.output, "w")
 
     options = {
         'server': 'https://issues.apache.org/jira',
