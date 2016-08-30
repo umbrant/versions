@@ -29,12 +29,21 @@ def main():
                         help="If not specified, will not do any actual updates to JIRA.")
     parser.add_argument("-o", "--output",
                         help="Log changes to an external file.")
+    parser.add_argument("-e", "--excludes",
+                        help="Exclude file containing one JIRA # (e.g. YARN-4321) per line. " +
+                        "Excluded JIRAs will not be updated.")
     args = parser.parse_args()
 
     outfile = None
     if args.output is not None:
         logger.info("Logging changes to output file %s", args.output)
         outfile = open(args.output, "w")
+
+    excludes = None
+    if args.excludes is not None:
+        with open(args.excludes, "r") as e:
+            excludes = [x[:-1] for x in e.readlines()]
+        logger.info("Will exclude %d JIRAs: %s", len(excludes), ", ".join(excludes))
 
     if args.force:
         logger.info("=================================================")
@@ -58,9 +67,10 @@ def main():
     issues = []
     max_results = 100
     # JIRAs fixed after 2.7.0 that do not have the 3.0.0-alpha1 fixVersion
-    query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion not in ("3.0.0-alpha1") and fixVersion in ("2.8.0", "2.9.0", "2.6.1", "2.6.2", "2.6.3", "2.6.4", "2.7.1", "2.7.2", "2.7.3")"""
+    query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion not in ("3.0.0-alpha1") and fixVersion in ("2.8.0", "2.9.0", "2.6.1", "2.6.2", "2.6.3", "2.6.4", "2.7.1", "2.7.2", "2.7.3") and resolution=Fixed"""
     # Test JIRA
     #query = "issue = HADOOP-13409"
+    #query = "issue in (HADOOP-12787, HADOOP-12345, HADOOP-13438, YARN-1279, YARN-1234)"
     while True:
         logger.info("Fetching batch of issues %d to %d", len(issues), len(issues)+max_results-1)
         batch = jira.search_issues(query, startAt=len(issues), maxResults=max_results)
@@ -71,6 +81,10 @@ def main():
     projects = {}
 
     for issue in issues:
+        if issue.key in excludes:
+            logger.debug("%s is excluded, skipping", issue.key)
+            continue
+
         logger.info("Found issue %s", issue.key)
 
         project_key = issue.fields.project.key
