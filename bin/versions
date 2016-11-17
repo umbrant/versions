@@ -17,7 +17,7 @@ if [[ ! -e "$hash_file" || "$git_hash" != "$(cat $hash_file)" ]]; then
     echo "Initializing virtualenv"
     pushd "$ENV"
     virtualenv "$env_name"
-    for package in jira; do
+    for package in jira gitpython; do
         "./$env_name/bin/pip" install $package
     done
     virtualenv --relocatable "$env_name"
