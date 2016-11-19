@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -22,6 +23,32 @@ def get_credentials():
         sys.exit(1)
 
     return (user, password)
+
+
+def get_jira(auth=False):
+    options = {
+        'server': 'https://issues.apache.org/jira',
+    }
+
+    basic_auth = None
+    if auth:
+        basic_auth = get_credentials()
+
+    jira = JIRA(options, basic_auth=basic_auth)
+    return jira
+
+
+def jira_query(jira, query):
+    issues = []
+    max_results = 100
+    while True:
+        logger.info("Fetching batch of issues %d to %d", len(issues), len(issues)+max_results-1)
+        batch = jira.search_issues(query, startAt=len(issues), maxResults=max_results)
+        issues += batch
+        if len(batch) == 0 or len(issues) >= batch.total:
+            break
+
+    return issues
 
 
 class UpdateRunner:
@@ -66,30 +93,14 @@ class UpdateRunner:
         else:
             logger.info("Dry-run, will not commit changes.")
 
-        options = {
-            'server': 'https://issues.apache.org/jira',
-        }
+        jira = get_jira(auth=True)
 
-        basic_auth = None
-        if args.force:
-            basic_auth = get_credentials()
-
-        jira = JIRA(options, basic_auth=basic_auth)    # a username/password tuple
-
-        # Find all issues reported by the admin
-        issues = []
-        max_results = 100
         # JIRAs fixed after 2.7.0 that do not have the 3.0.0-alpha1 fixVersion
         query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion not in ("3.0.0-alpha1") and fixVersion in ("2.8.0", "2.9.0", "2.6.1", "2.6.2", "2.6.3", "2.6.4", "2.7.1", "2.7.2", "2.7.3") and resolution=Fixed"""
         # Test JIRA
         #query = "issue = HADOOP-13409"
         #query = "issue in (HADOOP-12787, HADOOP-12345, HADOOP-13438, YARN-1279, YARN-1234)"
-        while True:
-            logger.info("Fetching batch of issues %d to %d", len(issues), len(issues)+max_results-1)
-            batch = jira.search_issues(query, startAt=len(issues), maxResults=max_results)
-            issues += batch
-            if len(batch) == 0 or len(issues) >= batch.total:
-                break
+        issues = jira_query(jira, query)
 
         projects = {}
 
@@ -155,9 +166,13 @@ class ValidateRunner:
         parser.add_argument("--end-ref",
                             default="HEAD",
                             help="Ending git ref. Defaults to HEAD.")
-        parser.add_argument("--fixup-commits",
+        parser.add_argument("--fix-version",
+                            required=True,
+                            help="Corresponding fix version on JIRA.")
+        parser.add_argument("--fixups",
                             type=file,
-                            help="File containing manual mappings of commits to certain JIRAs. This is used to correct typos in git log.")
+                            help="File containing manual mappings of" \
+                            + " commits to certain JIRAs. This is used to correct typos in git log.")
         parser.add_argument("--whitelist-jiras",
                             type=file,
                             help="File containing JIRAs to whitelist.")
@@ -165,29 +180,95 @@ class ValidateRunner:
     def run(self, args):
         # Parse fixup information
         fixups = {}
-        if args.fixup_commits:
-            for k,v in json.load(args.fixup_commits).iteritems():
-                fixups[k] = v
+        ignore = []
+        if args.fixups:
+            d = json.load(args.fixups)
+            if "fixups" in d:
+                for k,v in d["fixups"].iteritems():
+                    fixups[k] = v
+            if "ignore" in d:
+                for k in d["ignore"]:
+                    ignore.append(k)
         repo = Repo(args.source_dir)
-        commits_by_id = {}
-        unknown_commits = []
-        pattern = re.compile("(HADOOP|HDFS|MAPREDUCE|YARN)-[0-9]+")
+
+        # Get the commits
+        commits = []
+        commits.extend(repo.iter_commits(args.start_ref + "..." + args.end_ref))
+
+        to_skip = set(ignore)
+
+        # Filter out reverted commits
+        revert_pattern = re.compile("This reverts commit ([0-9a-f]+)")
+        for commit in commits:
+            match = revert_pattern.search(commit.message)
+            if match:
+                # Remove both the revert and the reverted commit
+                to_skip.add(commit.hexsha)
+                to_skip.add(match.group(1))
+
+        # Filter out merge commits
+        merge_pattern = re.compile("Merge branch '[a-zA-Z0-9-]+' into [a-zA-Z0-9-]+")
+        for commit in commits:
+            match = merge_pattern.search(commit.message)
+            if match:
+                to_skip.add(commit.hexsha)
+
         # Index the commits by JIRA #, including fixup information
-        for commit in repo.iter_commits(args.start_ref + "..." + args.end_ref):
+        commits_by_id = {}
+        pattern = re.compile("(HADOOP|HDFS|MAPREDUCE|YARN)-[0-9]+")
+        unidentified_commits = []
+        for commit in commits:
+            # Skip reverted commits
+            if commit.hexsha in to_skip:
+                continue
             # Fixup information overrides commit message
             jira_id = fixups.get(commit.hexsha)
             if not jira_id:
                 match = pattern.match(commit.message)
                 if not match:
-                    unknown_commits.append(commit)
-                    continue
+                    # Try to detect a revert
+                    match = revert_pattern.match(commit.message)
+                    if not match:
+                        unidentified_commits.append(commit)
+                        continue
+                    # Handle the revert
                 jira_id = match.group(0)
-            commits_by_id.get(jira_id, []).append(commit)
+            commits = commits_by_id.get(jira_id, [])
+            commits.append(commit)
+            commits_by_id[jira_id] = commits
 
-        print "Number knowns:", len(commits_by_id)
-        print "Number unknowns:", len(unknown_commits)
-        for commit in unknown_commits:
-            print commit.hexsha, commit.message.encode("utf-8").split("\n")[0]
+        for commit in unidentified_commits:
+            print commit.hexsha, commit.message.encode("utf-8")
+
+        print "Number commits in skip list:", len(to_skip)
+        print "Number identified commits:", len(commits_by_id)
+        print "Number unidentified commits:", len(unidentified_commits)
+
+        return
+
+        # Get JIRA issues for the fix version
+        jira = get_jira()
+        query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion in ("%s") and resolution=Fixed""" % (args.fix_version,)
+        issues = jira_query(jira, query)
+        issues_by_id = {}
+        for issue in issues:
+            issues_by_id[issue.key] = issue
+
+        issues_missing_commits = []
+        for issue in issues:
+            if issue.key not in commits_by_id:
+                issues_missing_commits.append(issue)
+        commits_missing_issues = []
+        for commit in commits_by_id:
+            if commit not in issues_by_id:
+                commits_missing_issues.append(commit)
+
+        print "Number identified commits:", len(commits_by_id)
+        print "Number unidentified commits:", len(unidentified_commits)
+        print "Number issues with matching commit(s):", len(issues_by_id)
+        print "Number issues with missing commits:", len(issues_missing_commits)
+        print "Number commits with missing issues:", len(commits_missing_issues)
+
 
 def parse_args(runners):
     parser = argparse.ArgumentParser(description="Perform version-related operations on JIRAs.")
