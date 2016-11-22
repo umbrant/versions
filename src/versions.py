@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-import json
 import logging
 import os
+import pickle
 import re
 import sys
+import yaml
 
 from git import Repo
 from jira import JIRA
@@ -147,6 +148,16 @@ class UpdateRunner:
             outfile.close()
 
 
+class PickleCommit:
+    def __init__(self, commit):
+        self.message = commit.message
+        self.hexsha = commit.hexsha
+
+
+class PickleIssue:
+    def __init__(self, issue):
+        self.key = issue.key
+
 class ValidateRunner:
 
     NAME = "validate"
@@ -160,40 +171,58 @@ class ValidateRunner:
         parser.add_argument("--source-dir",
                             default=os.getcwd(),
                             help="Location of source directory. Defaults to the current working directory.")
-        parser.add_argument("--start-ref",
-                            required=True,
-                            help="Starting git ref.")
-        parser.add_argument("--end-ref",
-                            default="HEAD",
-                            help="Ending git ref. Defaults to HEAD.")
         parser.add_argument("--fix-version",
                             required=True,
                             help="Corresponding fix version on JIRA.")
-        parser.add_argument("--fixups",
-                            type=file,
-                            help="File containing manual mappings of" \
-                            + " commits to certain JIRAs. This is used to correct typos in git log.")
-        parser.add_argument("--whitelist-jiras",
-                            type=file,
-                            help="File containing JIRAs to whitelist.")
+        parser.add_argument("--pickle",
+                            action="store_true",
+                            help="Write out intermediate data. Pair it with --unpickle for debugging.")
+        parser.add_argument("--unpickle",
+                            action="store_true",
+                            help="Read in intermediate data. Pair it with --pickle for debugging.")
 
     def run(self, args):
-        # Parse fixup information
+        # Parse version metadata information from external file
         fixups = {}
         ignore = []
-        if args.fixups:
-            d = json.load(args.fixups)
-            if "fixups" in d:
-                for k,v in d["fixups"].iteritems():
-                    fixups[k] = v
-            if "ignore" in d:
-                for k in d["ignore"]:
-                    ignore.append(k)
+        start_ref = ""
+        end_ref = ""
+
+        metadata_path = "metadata/" + args.fix_version + ".yaml"
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "r") as r:
+                d = yaml.load(r)
+                start_ref = d.get("start_ref", "")
+                end_ref = d.get("end_ref", "")
+                if "fixups" in d:
+                    for k,v in d["fixups"].iteritems():
+                        fixups[k] = v
+                if "ignore" in d:
+                    for k in d["ignore"]:
+                        ignore.append(k)
+        else:
+            print "No metadata file found for fix version: ", args.fix_version
+            print "You might want to create one."
+
         repo = Repo(args.source_dir)
 
         # Get the commits
         commits = []
-        commits.extend(repo.iter_commits(args.start_ref + "..." + args.end_ref))
+
+        pickle_commits_name = "commits.pickle"
+        if args.unpickle and os.path.exists(pickle_commits_name):
+            print "Loading commit data from", pickle_commits_name
+            with open(pickle_commits_name, "rb") as r:
+                commits = pickle.load(r)
+        else:
+            for c in repo.iter_commits(start_ref + "..." + end_ref):
+                commit = PickleCommit(c)
+                commits.append(commit)
+
+        if args.pickle:
+            print "Writing commit data to", pickle_commits_name
+            with open(pickle_commits_name, "wb") as w:
+                pickle.dump(commits, w)
 
         to_skip = set(ignore)
 
@@ -202,9 +231,12 @@ class ValidateRunner:
         for commit in commits:
             match = revert_pattern.search(commit.message)
             if match:
-                # Remove both the revert and the reverted commit
-                to_skip.add(commit.hexsha)
-                to_skip.add(match.group(1))
+                reverted_hexsha = match.group(1)
+                # If both the revert and the reverted are present, remove them
+                # If the reverted isn't present, there should be a new JIRA to track the revert
+                if reverted_hexsha in [c.hexsha for c in commits]:
+                    to_skip.add(commit.hexsha)
+                    to_skip.add(match.group(1))
 
         # Filter out merge commits
         merge_pattern = re.compile("Merge branch '[a-zA-Z0-9-]+' into [a-zA-Z0-9-]+")
@@ -218,12 +250,21 @@ class ValidateRunner:
         pattern = re.compile("(HADOOP|HDFS|MAPREDUCE|YARN)-[0-9]+")
         unidentified_commits = []
         for commit in commits:
-            # Skip reverted commits
-            if commit.hexsha in to_skip:
-                continue
             # Fixup information overrides commit message
-            jira_id = fixups.get(commit.hexsha)
-            if not jira_id:
+            fix = fixups.get(commit.hexsha)
+
+            # A single commit can containing multiple JIRAs
+            # Fixup can be either a list of JIRA keys or a single one
+            jira_ids = None
+            if type(fix) is list:
+                jira_ids = fix
+            elif type(fix) is str:
+                jira_ids = [fix]
+
+            if not jira_ids:
+                # Skip reverted and merge commits
+                if commit.hexsha in to_skip:
+                    continue
                 match = pattern.match(commit.message)
                 if not match:
                     # Try to detect a revert
@@ -232,25 +273,34 @@ class ValidateRunner:
                         unidentified_commits.append(commit)
                         continue
                     # Handle the revert
-                jira_id = match.group(0)
-            commits = commits_by_id.get(jira_id, [])
-            commits.append(commit)
-            commits_by_id[jira_id] = commits
-
-        for commit in unidentified_commits:
-            print commit.hexsha, commit.message.encode("utf-8")
-
-        print "Number commits in skip list:", len(to_skip)
-        print "Number identified commits:", len(commits_by_id)
-        print "Number unidentified commits:", len(unidentified_commits)
-
-        return
+                jira_ids = [match.group(0)]
+            for jira_id in jira_ids:
+                commits = commits_by_id.get(jira_id, [])
+                commits.append(commit)
+                commits_by_id[jira_id] = commits
 
         # Get JIRA issues for the fix version
-        jira = get_jira()
-        query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion in ("%s") and resolution=Fixed""" % (args.fix_version,)
-        issues = jira_query(jira, query)
+        issues = []
+        pickle_issues_name = "issues.pickle"
+        if args.unpickle and os.path.exists(pickle_issues_name):
+            print "Reading issue data from", pickle_issues_name
+            with open(pickle_issues_name, "rb") as r:
+                issues = pickle.load(r)
+        else:
+            jira = get_jira()
+            query = """project in (HADOOP, MAPREDUCE, HDFS, YARN) and fixVersion in ("%s") and resolution=Fixed""" % (args.fix_version,)
+            for i in jira_query(jira, query):
+                issues.append(PickleIssue(i))
+        if args.pickle:
+            print "Writing issue data to", pickle_issues_name
+            with open(pickle_issues_name, "wb") as w:
+                pickle.dump(issues, w)
         issues_by_id = {}
+        for k,v in fixups.iteritems():
+            if type(v) is str:
+                v = [v]
+            for key in v:
+                issues_by_id[key] = None
         for issue in issues:
             issues_by_id[issue.key] = issue
 
@@ -259,15 +309,24 @@ class ValidateRunner:
             if issue.key not in commits_by_id:
                 issues_missing_commits.append(issue)
         commits_missing_issues = []
-        for commit in commits_by_id:
-            if commit not in issues_by_id:
-                commits_missing_issues.append(commit)
+        for key, commit in commits_by_id.iteritems():
+            if key not in issues_by_id:
+                commits_missing_issues.append((key, commit))
 
+
+        print "Number commits in skip list:", len(to_skip)
         print "Number identified commits:", len(commits_by_id)
-        print "Number unidentified commits:", len(unidentified_commits)
         print "Number issues with matching commit(s):", len(issues_by_id)
+        print "Number unidentified commits:", len(unidentified_commits)
+        for commit in unidentified_commits:
+            print "\t", commit.hexsha, commit.message.encode("utf-8")
         print "Number issues with missing commits:", len(issues_missing_commits)
+        for issue in issues_missing_commits:
+            print "\t", issue.key
         print "Number commits with missing issues:", len(commits_missing_issues)
+        for key, commits in commits_missing_issues:
+            for commit in commits:
+                print "\t", key, commit.hexsha, commit.message.encode("utf-8")
 
 
 def parse_args(runners):
