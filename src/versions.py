@@ -313,20 +313,27 @@ class ValidateRunner:
             if key not in issues_by_id:
                 commits_missing_issues.append((key, commit))
 
-
+        num_issues = 0
         print "Number commits in skip list:", len(to_skip)
         print "Number identified commits:", len(commits_by_id)
         print "Number issues with matching commit(s):", len(issues_by_id)
         print "Number unidentified commits:", len(unidentified_commits)
+        num_issues += len(unidentified_commits)
         for commit in unidentified_commits:
             print "\t", commit.hexsha, commit.message.encode("utf-8")
         print "Number issues with missing commits:", len(issues_missing_commits)
+        num_issues += len(issues_missing_commits)
         for issue in issues_missing_commits:
             print "\t", issue.key
         print "Number commits with missing issues:", len(commits_missing_issues)
+        num_issues += len(commits_missing_issues)
         for key, commits in commits_missing_issues:
             for commit in commits:
                 print "\t", key, commit.hexsha, commit.message.encode("utf-8")
+
+        if num_issues > 0:
+            return 1
+        return 0
 
 
 def parse_args(runners):
