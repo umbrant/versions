@@ -18,12 +18,19 @@
         "c85cc3b56ebc63010fb22eb1bfa5849d591f4bcc" : ["YARN-4515", "YARN-5000", "YARN-5038"], # YARN-3368 umbrella
         "58ed4fa5449872d65efd52d840f02dd60af2771a" : ["HADOOP-13341", "HADOOP-13356", "HADOOP-13355", "HADOOP-13554", "HADOOP-13562", "HADOOP-13358", "HADOOP-13357", "HADOOP-13359", "HADOOP-13361", "HADOOP-13564", "HADOOP-13563", "HADOOP-13360"], # HADOOP-13341 umbrella
         "de4894936a5b581572f35fa5b8979d9f23da0891" : "HDFS-10368",
+        "13d8e552d2eddd66b3c3e6517d175567a4aa905c" : "HDFS-11207",
+        "3fd844b99fdfae6be6e5e261f371d175aad14229" : "HADOOP-13830",
+        "10468529a9b858bd945e7ecb063c9c1438efa474" : ["YARN-4752", "YARN-5605", "YARN-5821", "YARN-5783", "YARN-5819", "YARN-5885"],
+        "ada876cd1d22b61f237603cf339bbed65285dab8" : "YARN-5882",
     },
     "ignore": [
         "f388a209431c51e4062cc4a947274220870558a7", # Add changes and release notes for 3.0.0-alpha1 to site
         "b4f1971ff1dd578353036d7a123fe83c27c1e803", # Invalid GH PR
         "cdb323f356ca3d2540a57e0bdbf1bbb95d8b4b00", # Invalid GH PR
         "f78470c2644e18b03ae86af12c08893a8b2e536d", # Addendum PR for HADOOP-11601
-        "a1940464a498d1e662e5c3843f2d31ce63ec726b"
+        "a1940464a498d1e662e5c3843f2d31ce63ec726b",
+        "cfd8076f81930c3ffea8ec2ef42926217b83ab1a", # revert with bad message?
+        "f121645c4bdfdabfd6e4c40cd0c3dc8930372e17", # Close a GH PR
+        "523411d69b37d85046bd8b23001c267daac7a108", # Addendum for YARN-4844
     ]
 }
