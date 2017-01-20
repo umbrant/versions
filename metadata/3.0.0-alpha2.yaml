@@ -22,6 +22,7 @@
         "3fd844b99fdfae6be6e5e261f371d175aad14229" : "HADOOP-13830",
         "10468529a9b858bd945e7ecb063c9c1438efa474" : ["YARN-4752", "YARN-5605", "YARN-5821", "YARN-5783", "YARN-5819", "YARN-5885"],
         "ada876cd1d22b61f237603cf339bbed65285dab8" : "YARN-5882",
+        "a8f1c7f542963f66849bcb2a06893c6a99cbe235" : "HDFS-11268",
     },
     "ignore": [
         "f388a209431c51e4062cc4a947274220870558a7", # Add changes and release notes for 3.0.0-alpha1 to site
@@ -32,5 +33,6 @@
         "cfd8076f81930c3ffea8ec2ef42926217b83ab1a", # revert with bad message?
         "f121645c4bdfdabfd6e4c40cd0c3dc8930372e17", # Close a GH PR
         "523411d69b37d85046bd8b23001c267daac7a108", # Addendum for YARN-4844
+        "18f64065d5db6208daf50b02c1b5ed4ee3ce547a", # Updates the maven version to 3.0.0-alpha2
     ]
 }
