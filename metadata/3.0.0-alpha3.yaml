@@ -8,6 +8,8 @@
         "858d597be00ce006c1d1d4cd476729e4f1de8d25" : "HADOOP-14233",
         "db2adf356a937e4c539b2cf5dccfaf90271cf43e" : "HADOOP-14240",
         "1e11080b7825a2d0bafce91432009f585b7b5d21" : "HADOOP-13924",
+        "45382bf047d1ffa2ce1fa88f1f472daf524e2d22" : "MAPREDUCE-6883",
+        "98142d2f722e82d57b0e2bae6276f7c17fd99598" : "HADOOP-14344",
     },
     "ignore": [
         # These four are 2.8.0 JDiff related
@@ -27,4 +29,7 @@
         "e63a7814d21c6469adb01a3a93cfb3ed7613437d", # YARN-6200 revert
         "a393e84c6f57d50a471fc902dfd07ca1b4128a0e", # YARN-6200 revert
     ],
+    "ignore_jiras": [
+        "HADOOP-10105", # Umbrella for httpclient
+    ]
 }
