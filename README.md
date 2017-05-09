@@ -19,20 +19,28 @@ Validates that the contents of git log match the JIRA information for a specific
 * JIRAs that don't have a matching commit
 * Inconsistent reverts
 
-Since git commit messages can be imperfect, users can specify additional metadata to correct git log via a `--fixup-commits` JSON file. The file format is as follows:
+Note though that there is not a one-to-one correspondence between git log and JIRA. This can be due to typos in git commit messages, but also from things like reverts, branch merges, or umbrella JIRAs that do not have a corresponding commit.
+
+To support this, users can specify additional metadata via a YAML file in the `metadata/` directory. This metadata file also specifies the start and end refs for a particular JIRA fix version.
+
 
         {
-            "<commit_hash>" : "<jira_id>",
-            ...
+            "start_ref": "5db80ea9bc872f9fa585b5a50846a95e5a3c2af4", # Mandatory
+            "end_ref": "", # Optional
+            "fixups": {
+                # map of hash -> JIRA ID
+                "539ef5aa2e872f9fa585b5a50846a95e5a3c2af4" : "HDFS-11596",
+            },
+            "ignore": [
+                # List of hashes to ignore, e.g. addendum commits, merges
+                "a8f0cdaa2e872f9fa585b5a50846a95e5a3c2af4",
+            ],
+            "ignore_jiras": [
+                # Fixed JIRAs to ignore, like umbrella JIRAs
+                "HADOOP-10105",
+            ],
         }
 
-Some JIRAs also do not have a corresponding commit, such as umbrella JIRAs or website updates. These can be whitelisted via the `--whitelist-jiras` JSON file. The file format is as follows:
-
-        {
-        "whitelist_jiras": [
-            "<jira_id>",
-            ...
-        }
 
 ## update
 

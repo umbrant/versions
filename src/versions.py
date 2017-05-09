@@ -185,6 +185,7 @@ class ValidateRunner:
         # Parse version metadata information from external file
         fixups = {}
         ignore = []
+        ignore_jiras = []
         start_ref = ""
         end_ref = ""
 
@@ -200,6 +201,10 @@ class ValidateRunner:
                 if "ignore" in d:
                     for k in d["ignore"]:
                         ignore.append(k)
+                if "ignore_jiras" in d:
+                    for k in d["ignore_jiras"]:
+                        ignore_jiras.append(k)
+
         else:
             print "No metadata file found for fix version: ", args.fix_version
             print "You might want to create one."
@@ -306,7 +311,7 @@ class ValidateRunner:
 
         issues_missing_commits = []
         for issue in issues:
-            if issue.key not in commits_by_id:
+            if issue.key not in commits_by_id and issue.key not in ignore_jiras:
                 issues_missing_commits.append(issue)
         commits_missing_issues = []
         for key, commit in commits_by_id.iteritems():
