@@ -1,0 +1,49 @@
+{
+    "start_ref": "5d8b80ea9bc95adf64ff4f43b00898b8ae38556f",
+    "fixups": {
+        "539ef5aa2e872f9fa585b5a50846a95e5a3c2af4" : "HDFS-11596",
+        "615ac09499dc0b391cbb99bb0e9877959a9173a6" : "HDFS-11514",
+        "eeca8b0c4e2804b0fee5b012ea14b58383425ec3" : "HDFS-11450",
+        "88da9f6b6782423acd8ab7eb7d938720de7f3c0f" : "HDFS-11376",
+        "858d597be00ce006c1d1d4cd476729e4f1de8d25" : "HADOOP-14233",
+        "db2adf356a937e4c539b2cf5dccfaf90271cf43e" : "HADOOP-14240",
+        "1e11080b7825a2d0bafce91432009f585b7b5d21" : "HADOOP-13924",
+        "45382bf047d1ffa2ce1fa88f1f472daf524e2d22" : "MAPREDUCE-6883",
+        "98142d2f722e82d57b0e2bae6276f7c17fd99598" : "HADOOP-14344",
+        "c22cf004425daa9c350df5e365b0db85b1628b40" : "HADOOP-14502",
+        "303c8dc9b6c853c0939ea9ba14388897cc258071" : "HDFS-11078",
+        "d0f346af26293f0ac8d118f98628f5528c1d6811" : "HDFS-11535",
+        "b8b69d797aed8dfeb65ea462c2856f62e9aa1023" : "HDFS-11661",
+    },
+    "ignore": [
+        # These four are 2.8.0 JDiff related
+        "e7b7c96a30b0fee3af22a7719eaaa6481e76a963",
+        "6df029db36412b7219b64313dcbe1874dc1c8b0c",
+        "d174c06b01e1f743d3111b9b760a9824d8106b86",
+        "d8e6d6df4c23aa11455c1775391b1c7883bec2ea",
+        # These two are 3.0.0-alpha2 related
+        "ff02bdfe65b5ff894efd1a3aa0e35bac9f4b783c",
+        "d79c645b2e07494e2156a9666a378355485dff07",
+        # These two are 3.0.0-alpha3 related
+        "2cd612ba8e3b84ddf41acf7b1beb0a4757a2465b",
+        "16ad896d5cb8ab21e9cb2763df7c15cfcc0a6ede",
+        # These are in 3.0.0-alpha3
+        "bb6a214cd34b9c87b0ba68205c680024ad294587", # YARN-6336
+        "c61bc2d843ace614078be24b2dcbf3fb43d6f358", # YARN-6278
+        # The rest
+        "b46cd315f7c81cfd89be40f1edacaf9a11282e15", # security
+        "e120ee865aa78eaff4a80122c5f3207a97b4924d", # security
+        "1a56a3db599659091284e3016d0309052966d018", # security
+        "fdf72029929bd31f3cb996525621c8d2cdfd6326", # merge commit
+        "4e14eaded21f244d280b1ffe90a89959fd753047", # merge commit
+        "f01a69f84f4cc7d925d078a7ce32e5800da4e429", # private
+        "0fc6f38379f0047afd23ac14abcb5086d65a7f67", # addendum
+        "8a2e1d4cbe45f44f30e48f3fb5d840c1b074293e", # alpha2
+        "b01514f65bc6090a50a583f67d1ecb5d74b6d276", # alpha2
+        "e63a7814d21c6469adb01a3a93cfb3ed7613437d", # YARN-6200 revert
+        "a393e84c6f57d50a471fc902dfd07ca1b4128a0e", # YARN-6200 revert
+    ],
+    "ignore_jiras": [
+        "HADOOP-10105", # Umbrella for httpclient
+    ]
+}
