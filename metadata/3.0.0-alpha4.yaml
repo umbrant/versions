@@ -14,6 +14,7 @@
         "303c8dc9b6c853c0939ea9ba14388897cc258071" : "HDFS-11078",
         "d0f346af26293f0ac8d118f98628f5528c1d6811" : "HDFS-11535",
         "b8b69d797aed8dfeb65ea462c2856f62e9aa1023" : "HDFS-11661",
+        "d6df0fdbbda42b4ddab3810b5ac57336c6241ba7" : "HDFS-11646",
     },
     "ignore": [
         # These four are 2.8.0 JDiff related

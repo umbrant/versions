@@ -1,0 +1,30 @@
+{
+    "start_ref": "af2773f609ba930825bab5d30767757c0e59aac7",
+    "fixups": {
+        "0b67436068899497e99c86f37fd4887ca188fae2" : "HDFS-12036",
+        "fbb7d6bcbb887ce52ab1e9d5a1fed67a7f8a4be8" : "MAPREDUCE-6924",
+        "713349a9af4654dad4d4c372454552bfd063ca5f" : "MAPREDUCE-6924",
+        "e15f92829558cc4a30b10f2fccfd17c2f8088003" : "MAPREDUCE-6924",
+        "11ece0bda1f6e5dd9d0f828b7c29acacf6087baa" : "YARN-5548", # addendum
+        "0b7afc060c2024a882bd1934d0f722bfca731742" : "YARN-5731", # addendum
+        "5e0acee75e259c4e241c89b8227efb85f6ea953a" : "YARN-6064", # addendum
+        "72eba25e09e69d35c541603844dacf70a8499327" : "HADOOP-14676",
+    },
+    "ignore": [
+        "8737c2a8e96799cf3fda730d25a01f6ea2f12e9b", # fixup for yarn-server-router version
+        "712e97d4cfab15bec4cf4b11cc067b8f85c8bec8", # fixup for yarn-server-router version
+        "f317e0cb48c16e072aa259a0a7ed71a05274bb80", # fixup for yarn-server-router version
+        "f10864a820c5104d748378aa1c2c408e4aad8a6c", # alpha4 release notes, changes, jdiff
+        "a2f0cbd92f7e90909cf817c261a5fae13a9695b4", # revert of accidental commit
+        # YARN TSv2 alpha2 merge
+        "3d00c8f3942da931150de79f42cd4913bf751123",
+        "2556c012e385947cfdcd23f597b174dc78efde46",
+        "ecbc8d481659ded00d23de1ab366722932792e95",
+        "ccb38c19919d197ac751852717d4cac76518c211",
+        "684de1a9025261dcb6ab3b5ec9ba69738c947ecc",
+        "a8f082a180cfc14e7fd347b2c03ab0f31e1dd33c",
+        "24447b36260f930acec60b9306f7e381f816a99e",
+    ],
+    "ignore_jiras": [
+    ]
+}
