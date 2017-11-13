@@ -9,6 +9,9 @@
         "0b7afc060c2024a882bd1934d0f722bfca731742" : "YARN-5731", # addendum
         "5e0acee75e259c4e241c89b8227efb85f6ea953a" : "YARN-6064", # addendum
         "72eba25e09e69d35c541603844dacf70a8499327" : "HADOOP-14676",
+        "61dc4bcd617324335eea689a6d811f45feb77f8e" : "HDFS-12386",
+        "974605c0255fa75832293e20884976857f7341a8" : "YARN-7196",
+        "61bc2c05af23f66ef056d6a30394cca1e7b5fe92" : "HDFS-12457",
     },
     "ignore": [
         "8737c2a8e96799cf3fda730d25a01f6ea2f12e9b", # fixup for yarn-server-router version
@@ -25,7 +28,17 @@
         "684de1a9025261dcb6ab3b5ec9ba69738c947ecc",
         "a8f082a180cfc14e7fd347b2c03ab0f31e1dd33c",
         "24447b36260f930acec60b9306f7e381f816a99e",
+        # Following two are initial HADOOP-14771 commit and revert
+        # Auto revert tracking didn't work since the revert was pushed
+        # as a backport and thus the hash didn't match.
+        "5aa2c6baa704563fd6c5f665cf13587fbe142abb",
+        "4767d1bb1fca46e572d81db79bea83d5289879bc",
+        # Revert of MAPREDUCE-6958 wasn't tracked since it was a backport
+        "db88b6179dfe706525a2ba0fad6cd2c193087f39",
     ],
     "ignore_jiras": [
+        "YARN-2915", # YARN federation umbrella
+        "HDFS-7877", # DN maintenance state umbrella
+        "HDFS-7337", # EC pluggable policy umbrella
     ]
 }
