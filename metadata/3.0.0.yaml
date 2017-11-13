@@ -1,0 +1,29 @@
+{
+    "start_ref": "2223393ad1d5ffdd62da79e1546de79c6259dc12",
+    "fixups": {
+        "fa676ba06b4039f35363e211a8e91ad15170737f": "YARN-7304",
+        "e49509f024bf47744c8445f919f6e55d272835f8" : "YARN-7428",
+    },
+    "ignore": [
+        "ce10c1ef05631881eb425e7a04b73599ad112e21", # jdiff
+        "3760f9cfb3cc3e90d1ac908cbcc79e13d22623e9", # jdiff
+        "f36b2c699078b4a029512221990bcc3f44feefb8", # 2.8.2 CHANGES/ RNs
+        "5a4f37019ae911f25dc98dbd74899d99f31ff1c5", # 3.0.0 GA branching
+        # These are router-based federation, don't know why these particular ones get flagged
+        "ff134679e0399d8172df707facb769e55a3fb751",
+        "9e3491fafa59e1d87b7745aff4c0321adcf4aaf1",
+        "2b99a4d29f376adf170f67a6db1bca5708ef35ba",
+        "bec03f7060d353e78a68bb64c88397cf7181727d", # Addendum for YARN-2612
+        "41e8ed7e98f3efc5a09558b7877941d327b4a04f", # Addendum for YARN-7269
+        "72d7bedac9349bc995a303ab21ae2fafbcae3fd2",
+        "f6de2b741ed75aecdd5244ce4a360b9780b53251",
+        "9efe9bd3d825a5055f68661dabf084df2eddd0f2", # Addendum for YARN-7289
+    ],
+    "ignore_jiras": [
+        "YARN-5326", # Umbrella for recurring reservations
+        "YARN-3813", # Umbrella for application timeout
+        "HDFS-10467", # Umbrella for router-based federation
+        "YARN-1492", # Umbrella for shared cache
+        "YARN-5085", # Umbrella for execution type
+    ]
+}
