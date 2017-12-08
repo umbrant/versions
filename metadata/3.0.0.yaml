@@ -18,6 +18,11 @@
         "72d7bedac9349bc995a303ab21ae2fafbcae3fd2",
         "f6de2b741ed75aecdd5244ce4a360b9780b53251",
         "9efe9bd3d825a5055f68661dabf084df2eddd0f2", # Addendum for YARN-7289
+        "3853c33466f7aad56f6981194d1810a42d10e02e", # maven version update
+        "4045ef047d8a601e3ff43b68501211e42b1e062e", # resource types partial backport
+        "a9fa0349a08528abd96ce569695966fb64312275", # resource types partial backport
+        "335e3a633424c743f9f4bd1658728f979dfe43e0", # resource types partial backport
+        "605fcde012022b0c18d441517dbabb2da29c9d98", # resource types partial backport
     ],
     "ignore_jiras": [
         "YARN-5326", # Umbrella for recurring reservations
@@ -25,5 +30,7 @@
         "HDFS-10467", # Umbrella for router-based federation
         "YARN-1492", # Umbrella for shared cache
         "YARN-5085", # Umbrella for execution type
+        "YARN-5734", # Umbrella for OrgQueue
+        "HADOOP-14112", # umbrella for ADL
     ]
 }
